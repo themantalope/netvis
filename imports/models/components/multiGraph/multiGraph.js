@@ -43,15 +43,11 @@ class MultiGraph {
         var tnodes = nodedata.nodes;
         var max_depth = nodedata.max_depth;
         var global_struc = nodedata.structure;
-//        console.log(tnodes);
-//        console.log("number of nodes: ", tnodes.length);
 
         var tmatricies = [];
-        //do some error checking before we add any matricies.
         for(var i = 0; i < matricies.length; i++){
             var curmat = matricies[i].data;
             var matsize = curmat.length;
-//            console.log("matrix number: ", i + 1, "number of rows: ", matsize);
 
             if (matsize != tnodes.length){
                 throw "The number of nodes must be the same as the number of rows and columns in the matricies!"
@@ -66,8 +62,6 @@ class MultiGraph {
 
         }
 
-
-        // bind the data to the weak maps
         _nodes.set(this, tnodes);
         _matricies.set(this, tmatricies);
         _max_group_depth.set(this, max_depth);
@@ -130,7 +124,10 @@ class MultiGraph {
         var node_struc_data = this._determineGlobalNodeStructure(nodes);
 
 
-        return {"nodes":tnodes, "max_depth":node_struc_data.max_depth, "structure":node_struc_data.structure};
+        return {"nodes":tnodes,
+                "max_depth":node_struc_data.max_depth,
+                "structure":node_struc_data.structure,
+                "group_ids":node_struc_data.group_ids};
     }
     /*
     * This function determines the ultimate hierarchy of the nodes, based on what is in the group.
@@ -141,6 +138,8 @@ class MultiGraph {
     _determineGlobalNodeStructure(nodes, identifier){
 
         var structure = {"level":0, "groups":{}};
+        var group_id_keys = {};
+        var group_counter = 0;
         var max_depth = 0;
 
         for (var i = 0; i < nodes.length; i++){
@@ -149,6 +148,10 @@ class MultiGraph {
             var curstructure = structure;
 
             while("group" in obj){
+              if (!(obj.group in group_id_keys)) {
+                group_id_keys[obj.group] = group_counter;
+                group_counter ++;
+              }
 
                 if (curstructure.level == curdepth){
 
@@ -169,7 +172,7 @@ class MultiGraph {
 
         }
 
-        return {"structure":structure, "max_depth":max_depth};
+        return {"structure":structure, "max_depth":max_depth, "group_ids":group_id_keys};
 
     }
 

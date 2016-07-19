@@ -6,8 +6,7 @@ import angularMeteor from 'angular-meteor';
 import { Meteor } from 'meteor/meteor';
 import template from './forceDirectedGraph.html';
 import { Networks } from "../../../api/networks";
-import { HTTP } from "meteor/http";
-// import uiRouter from 'angular-ui-router';
+import uiRouter from 'angular-ui-router';
 import {MultiGraphJSONLoader} from "../../../models/components/multiGraphJSONLoader/multiGraphJSONLoader"
 import {name as NetworkUpload } from "../networkUpload/networkUpload";
 
@@ -18,18 +17,10 @@ class ForceDirectedGraph{
 
         $reactive(this).attach($scope);
 
-
-        $scope.fdg = this;
-
         this.apply = $scope.$apply;
 
 
         this.subscribe("networks");
-        console.log(this.jsonFile);
-        $scope.testval = 42;
-        $scope.jsonFile = this.jsonFile;
-        this.graph;
-        $scope.graph = this.graph;
         this.loadedGraphs = false;
 
         $scope.loadedGraphs = this.loadedGraphs;
@@ -43,18 +34,6 @@ class ForceDirectedGraph{
 
         $scope.networks = this.networks;
 
-
-        $scope.loadNets = function () {
-            this.loadNetwork();
-        }
-
-    }
-
-    checkThing(){
-        // console.log("nothing here: ", !this.jsonFile);
-        // console.log(this.jsonFile);
-        // this.jsonFileChanged(this.jsonFile)
-        console.log("networks: ", this.networks);
     }
 
     loadNetwork(){
@@ -124,7 +103,8 @@ const name = "forceDirectedGraph";
 //create a module
 export default angular.module(name, [
     angularMeteor,
-    NetworkUpload
+    NetworkUpload,
+    uiRouter
 ]).directive(name, function () {
     //constants
     var width = 800;
@@ -234,12 +214,18 @@ export default angular.module(name, [
                             .attr("cy", function (d) { return d.y });
 
                     }
-
                 }
             };
-
-
-
         }
     }
-});
+}).config(config);
+
+
+function config ($stateProvider) {
+  'ngInject';
+  $stateProvider.state("vis", {
+    url: "/vis",
+    template: "<force-directed-graph></force-directed-graph>"
+  }
+  )
+}
