@@ -94,32 +94,39 @@ class MultiGraph {
     * @param {nodes} - The node list to process.
     * */
     _processNodes(nodes){
-        var tnodes = [];
-        //add the nodes to the object's node array
-        for (var i = 0; i < nodes.length; i++){
-            var curnode = nodes[i];
-            if ("index" in curnode){
-                tnodes.push(curnode);
-            } else {
-                curnode["index"] = i;
-                tnodes.push(curnode)
-            }
+      var node_struc_data = this._determineGlobalNodeStructure(nodes);
+      var tnodes = [];
+      //add the nodes to the object's node array
+      for (var i = 0; i < nodes.length; i++){
+          var curnode = nodes[i];
+          if ("index" in curnode){
+            tnodes.push(curnode);
+          } else {
+            curnode["index"] = i;
+            tnodes.push(curnode)
+          }
+      }
+
+      //sort the node list based on the index values
+      tnodes.sort(function(first, second){
+          return second.index - first.index;
+      });
+
+      //check the depth of "group" within the nodes
+      var group_ids = node_struc_data.group_ids;
+
+      if (!_.isEmpty(group_ids)){
+        for (var i = 0; i < tnodes.length; i++){
+          tnodes[i].group_id = group_ids[tnodes[i].group];
         }
-
-        //sort the node list based on the index values
-        tnodes.sort(function(first, second){
-            return second.index - first.index;
-        });
-
-        //check the depth of "group" within the nodes
-
-        var node_struc_data = this._determineGlobalNodeStructure(nodes);
+      }
 
 
-        return {"nodes":tnodes,
-                "max_depth":node_struc_data.max_depth,
-                "structure":node_struc_data.structure,
-                "group_ids":node_struc_data.group_ids};
+
+      return {"nodes":tnodes,
+              "max_depth":node_struc_data.max_depth,
+              "structure":node_struc_data.structure,
+              "group_ids":node_struc_data.group_ids};
     }
     /*
     * This function determines the ultimate hierarchy of the nodes, based on what is in the group.
@@ -127,44 +134,47 @@ class MultiGraph {
     * @param {identifer} - this should be some sort of identifier that allows for a label to be had, should be present
     * within the node "group" structure
     * */
-    _determineGlobalNodeStructure(nodes, identifier){
+    _determineGlobalNodeStructure(nodes){
 
-        var structure = {"level":0, "groups":{}};
-        var group_id_keys = {};
-        var group_counter = 0;
-        var max_depth = 0;
+      var structure = {"level":0, "groups":[]};
+      var group_id_keys = {};
+      var group_counter = 0;
+      var max_depth = 0;
 
-        for (var i = 0; i < nodes.length; i++){
-            var obj = nodes[i];
-            var curdepth = 0;
-            var curstructure = structure;
+      for (var i = 0; i < nodes.length; i++){
+          var obj = nodes[i];
+          var curdepth = 0;
+          var curstructure = structure;
 
-            while("group" in obj){
+          while(typeof(obj) === "object"){
+            if ("group" in obj){
               if (!(obj.group in group_id_keys)) {
                 group_id_keys[obj.group] = group_counter;
                 group_counter ++;
               }
 
-                if (curstructure.level == curdepth){
+              if (curstructure.level == curdepth){
 
-                    if (!(obj.group[identifier] in curstructure.groups)) {
-                        curstructure.groups[obj.group[identifier]] = {"level":curdepth+1, "groups":{}};
-                    }
+                  if (curstructure.groups.indexOf(obj.group) === -1) {
+                      curstructure.groups.push(obj.group)
+                  }
 
-                }
+              }
 
-                obj = obj.group;
-                curstructure = curstructure.groups[obj.group[identifier]];
-                curdepth++;
-                if (curdepth > max_depth){
-                    max_depth = curdepth;
-                }
-
+              obj = obj.group;
+              curstructure = curstructure.groups[obj.group];
+              curdepth++;
+              if (curdepth > max_depth){
+                  max_depth = curdepth;
+              }
             }
+          }
 
-        }
+          curdepth = 0;
 
-        return {"structure":structure, "max_depth":max_depth, "group_ids":group_id_keys};
+      }
+
+      return {"structure":structure, "max_depth":max_depth, "group_ids":group_id_keys};
 
     }
 

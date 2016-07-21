@@ -26,15 +26,15 @@ export function upload(dataUrl, name, resolve, reject) {
     // convert to ArrayBuffer
     blobToArrayBuffer(blob, (data) => {
         console.log("here is the 'data' inside blobToArrayBuffer: ", data);
-        console.log("data.length: ", data.length);
-        console.log("data.prototype: ", data.prototype);
+        console.log("here is the 'blob' inside blobToArrayBuffer: ", blob);
+        console.log("here is the 'file' inside blobToArrayBuffer: ", file);
         const upload = new UploadFS.Uploader({
-            data,
-            file,
+            file: file,
+            data: blob,
             store: NetworksStore,
             onError: reject,
             onComplete: resolve
-        });
+        }, function(e){console.log("had an error in blobToArrayBuffer: ", e)});
 
         upload.start();
     }, reject);

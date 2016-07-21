@@ -1,7 +1,4 @@
 <p>This is a page for a force directed graph, plotted with D3.</p>
-<button ng-click="forceDirectedGraph.checkThing()">Click this</button>
-<button ng-click="forceDirectedGraph.loadNetwork()">Click here to see if you have a network</button>
-<button ng-click="forceDirectedGraph.updateStuff()">Let's see if this does something</button>
 <!--<div ng-model="forceDirectedGraph.graph">Hello there I have "graph" as ng-model...</div>-->
 <network-upload files="networkUpload.networkFileSrc"></network-upload>
 <br>
@@ -9,8 +6,7 @@
 
 <div>
   <span>Select File: </span>
-  <select ng-model="forceDirectedGraph.selectedNetFile" ng-selected="blahblah">
-    <option value="blahblah">Network File</option>
-    <option ng-repeat="net in forceDirectedGraph.networks" value="{{net}}">{{net}}</option>
+  <select ng-model="forceDirectedGraph.selectedNetFile" ng-options="net.name for net in forceDirectedGraph.networks" ng-placeholder="Choose Network File">
+    <option value="">Choose Network File</option>
   </select>
 </div>
