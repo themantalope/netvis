@@ -4,6 +4,7 @@
 
 let _nodes = new WeakMap();
 let _links = new WeakMap();
+let _node_structure = new WeakMap();
 
 class Graph{
     /*
@@ -13,9 +14,10 @@ class Graph{
     * index in the node list) with weight w.
     * */
 
-    constructor(nodes, adjacency){
+    constructor(nodes, adjacency, node_structure){
 
         _nodes.set(this, nodes);
+        _node_structure.set(this, node_structure);
 
         //now we need to process the adjacency matrix
         var links = this._processAdjacency(adjacency);
@@ -45,6 +47,10 @@ class Graph{
 
     getLinks(){
         return _links.get(this);
+    }
+
+    getNodeStructure(){
+      return _node_structure.get(this);
     }
 }
 

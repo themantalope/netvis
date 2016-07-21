@@ -189,8 +189,9 @@ class MultiGraph {
         var allmats = _matricies.get(this);
         var curmat = allmats[matrix_index];
         var nodes = this.getNodes();
+        var ns = this.nodeStructure();
 
-        return new Graph(nodes, curmat);
+        return new Graph(nodes, curmat, ns);
     }
 
 }

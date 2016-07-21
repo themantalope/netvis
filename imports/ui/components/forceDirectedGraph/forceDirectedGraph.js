@@ -168,14 +168,14 @@ export default angular.module(name, [
 
               if (scope.forceDirectedGraph.graph) {
 
-                var colors = d3.scale.category20();
+                var colors = d3.scale.category10();
 
                 var force = d3.layout.force()
-                              .size([500,300])
+                              .size([width, height])
                               .nodes(scope.forceDirectedGraph.graph.getNodes())
                               .links(scope.forceDirectedGraph.graph.getLinks())
-                              .linkDistance([10])        // <-- New!
-                              .charge([-10]);
+                              .linkDistance([20])        // <-- New!
+                              .charge([-100]);
 
                 var edge = vis.selectAll("line")
                               .data(scope.forceDirectedGraph.graph.getLinks())
@@ -190,9 +190,36 @@ export default angular.module(name, [
                               .data(scope.forceDirectedGraph.graph.getNodes())
                               .enter()
                               .append("circle")
-                              .attr("r", 3)
+                              .attr("r", 5)
                               .style("fill", function (d) { return colors(d.group_id)});
 
+
+                var node_struc = scope.forceDirectedGraph.graph.getNodeStructure();
+                var group_id_arr = [];
+                for (var key in node_struc.groups) {
+                  group_id_arr.push({"group_id":key, "group":node_struc.groups[key]})
+                }
+
+                var legend = vis.selectAll(".legend")
+                                .data(group_id_arr)
+                                .enter()
+                                .append("g")
+                                .attr("class", "legend")
+                                .attr("transform", function (d,i) {return "translate(0," + i * 20 + ")";});
+
+                legend.append("rect")
+                      .attr("x", width - 18)
+                      .attr("width", 18)
+                      .attr("height", 18)
+                      .style("fill", function(d) {
+                        return colors(d.group_id);
+                      });
+
+                legend.append("text")
+                      .attr("x", width - 24)
+                      .attr("y", 9)
+                      .attr("dy", ".35em")
+                      .style("text-anchor", "end").text(function (d) {return d.group;});
 
                 force.on("tick", ticked);
 
