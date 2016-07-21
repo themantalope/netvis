@@ -175,7 +175,7 @@ export default angular.module(name, [
                               .nodes(scope.forceDirectedGraph.graph.getNodes())
                               .links(scope.forceDirectedGraph.graph.getLinks())
                               .linkDistance([20])        // <-- New!
-                              .charge([-100]);
+                              .charge([-80]);
 
                 var edge = vis.selectAll("line")
                               .data(scope.forceDirectedGraph.graph.getLinks())
@@ -205,7 +205,7 @@ export default angular.module(name, [
                                 .enter()
                                 .append("g")
                                 .attr("class", "legend")
-                                .attr("transform", function (d,i) {return "translate(0," + i * 20 + ")";});
+                                .attr("transform", function (d,i) {return "translate(-10," + i * 20 + ")";});
 
                 legend.append("rect")
                       .attr("x", width - 18)
@@ -220,6 +220,54 @@ export default angular.module(name, [
                       .attr("y", 9)
                       .attr("dy", ".35em")
                       .style("text-anchor", "end").text(function (d) {return d.group;});
+
+                d3.select(window).on("resize", resize);
+
+                function resize() {
+
+                  opwidth = 800;
+                  opheight = 600;
+
+                  if (window.innerWidth < opwidth) {
+                    width = window.innerWidth;
+                  } else  {
+                    width = opwidth;
+                  }
+
+                  if( window.innerHeight < opheight){
+                    height = window.innerHeight;
+                  } else {
+                    height = opheight;
+                  }
+                  
+                  vis.attr("width", width)
+                     .attr("height", height);
+                  force.size([width, height]).resume();
+
+                  d3.selectAll(".legend").remove();
+
+                  var legend = vis.selectAll(".legend")
+                                  .data(group_id_arr)
+                                  .enter()
+                                  .append("g")
+                                  .attr("class", "legend")
+                                  .attr("transform", function (d,i) {return "translate(0," + i * 20 + ")";});
+
+
+                  legend.append("rect")
+                        .attr("x", width - 18)
+                        .attr("width", 18)
+                        .attr("height", 18)
+                        .style("fill", function(d) {
+                          return colors(d.group_id);
+                        });
+
+                  legend.append("text")
+                        .attr("x", width - 24)
+                        .attr("y", 9)
+                        .attr("dy", ".35em")
+                        .style("text-anchor", "end").text(function (d) {return d.group;});
+                }
 
                 force.on("tick", ticked);
 
