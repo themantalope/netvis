@@ -6,3 +6,11 @@
 <network-upload files="networkUpload.networkFileSrc"></network-upload>
 <br>
 <br>
+
+<div>
+  <span>Select File: </span>
+  <select ng-model="forceDirectedGraph.selectedNetFile" ng-selected="blahblah">
+    <option value="blahblah">Network File</option>
+    <option ng-repeat="net in forceDirectedGraph.networks" value="{{net}}">{{net}}</option>
+  </select>
+</div>

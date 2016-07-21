@@ -23,14 +23,17 @@ class NetworkUpload {
         if (files.length) {
             this.currentFile = files[0];
             console.log("current file: ", this.currentFile);
+            console.log("this.networkFileSrc: ", this.networkFileSrc);
 
             const reader = new FileReader();
 
             reader.onload = this.$bindToContext( (e) => {
                 console.log("in reader.onload");
                 // console.log("here is e.target.result: ", e.target.result);
+                console.log("e: ", e);
                 this.networkFileSrc = e.target.result;
                 // console.log("here is this.networkFileSrc: ", this.networkFileSrc);
+                console.log("is the same?: ", e.target.result === this.networkFileSrc);
                 this.save();
             });
 
@@ -46,9 +49,14 @@ class NetworkUpload {
     save() {
         // console.log("this.networkFileSrc: ", this.networkFileSrc);
         // console.log("this.currentFile.name: ", this.currentFile.name);
-        console.log("this.uploaded: ", this.uploaded);
+        // console.log("this.uploaded: ", this.uploaded);
+
+        console.log("about to upload");
+        console.log("have file src?: ", !(!this.networkFileSrc));
+        console.log("file name: ", this.currentFile.name);
 
         upload(this.networkFileSrc, this.currentFile.name, this.$bindToContext( (file) => {
+            console.log("in upload");
             console.log("file: ", file);
             this.uploaded.push(file);
             this.reset();

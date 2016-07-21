@@ -7,7 +7,7 @@ import { Meteor } from 'meteor/meteor';
 import template from './forceDirectedGraph.html';
 import { Networks } from "../../../api/networks";
 import uiRouter from 'angular-ui-router';
-import {MultiGraphJSONLoader} from "../../../models/components/multiGraphJSONLoader/multiGraphJSONLoader"
+import {MultiGraphJSONLoader} from "../../../models/components/multiGraphJSONLoader/multiGraphJSONLoader";
 import {name as NetworkUpload } from "../networkUpload/networkUpload";
 
 
@@ -123,6 +123,7 @@ export default angular.module(name, [
             console.log("scope inside link function: ", scope);
             console.log("element inside link function: ", element);
             console.log("attrs inside link function: ", attrs);
+            console.log("scope.forceDirectedGraph.selectedNetFile: ", scope.forceDirectedGraph.selectedNetFile);
 
             scope.$watch("links", function(newval, oldval){
                 scope.links = newval;
@@ -150,6 +151,17 @@ export default angular.module(name, [
                     updatedsomething();
                 }
 
+            }, true);
+
+            scope.$watch("forceDirectedGraph.selectedNetFile", function(newval, oldval){
+
+
+              if(scope.forceDirectedGraph.selectedNetFile in scope.forceDirectedGraph.networks){
+                console.log("Here is the selected netfile: ", newval);
+                scope.forceDirectedGraph.updateStuff();
+              } else {
+                console.log("here is the selected netfile (not in the list): ", scope.forceDirectedGraph.selectedNetFile);
+              }
             }, true);
 
 

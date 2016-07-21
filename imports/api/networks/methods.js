@@ -1,7 +1,7 @@
 /**
  * Created by antalek on 7/14/16.
  */
-import { UploadFS } from 'meteor/jalik:ufs';
+import { UploadFS } from "meteor/jalik:ufs"
 import { NetworksStore } from './store';
 import { dataURLToBlob, blobToArrayBuffer } from './helpers';
 
@@ -18,11 +18,16 @@ export function upload(dataUrl, name, resolve, reject) {
     const blob = dataURLToBlob(dataUrl);
     blob.name = name;
 
+
     // pick from an object only: name, type and size
     const file = _.pick(blob, 'name', 'type', 'size');
 
+
     // convert to ArrayBuffer
     blobToArrayBuffer(blob, (data) => {
+        console.log("here is the 'data' inside blobToArrayBuffer: ", data);
+        console.log("data.length: ", data.length);
+        console.log("data.prototype: ", data.prototype);
         const upload = new UploadFS.Uploader({
             data,
             file,

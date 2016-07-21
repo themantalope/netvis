@@ -35,10 +35,7 @@ class MultiGraph {
     * should be contained within the "data" attribute. At this time, only dense matricies are accepted but future
     * versions will include support for sparse matrix formats.
     * */
-
     constructor(nodes, matricies){
-
-
         var nodedata = this._processNodes(nodes);
         var tnodes = nodedata.nodes;
         var max_depth = nodedata.max_depth;
@@ -97,15 +94,10 @@ class MultiGraph {
     * @param {nodes} - The node list to process.
     * */
     _processNodes(nodes){
-//        console.log("in the node processing function.");
-//        console.log("here are the nodes that were passed in: ", nodes);
-//        console.log("nodes.length: ", nodes.length);
-
         var tnodes = [];
         //add the nodes to the object's node array
         for (var i = 0; i < nodes.length; i++){
             var curnode = nodes[i];
-//            console.log("here is the current node I am processing: ", curnode);
             if ("index" in curnode){
                 tnodes.push(curnode);
             } else {
@@ -195,10 +187,3 @@ class MultiGraph {
 
 
 export {MultiGraph}
-
-// const name = "multiGraph";
-//
-// export default angular.module(name, [
-//     angularMeteor,
-//     MultiGraph
-// ]);
