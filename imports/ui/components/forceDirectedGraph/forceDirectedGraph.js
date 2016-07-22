@@ -9,6 +9,7 @@ import { Networks } from "../../../api/networks";
 import uiRouter from 'angular-ui-router';
 import {MultiGraphJSONLoader} from "../../../models/components/multiGraphJSONLoader/multiGraphJSONLoader";
 import {name as NetworkUpload } from "../networkUpload/networkUpload";
+import { name as Graph } from "../../../models/components/graph/graph";
 
 
 class ForceDirectedGraph{
@@ -67,8 +68,10 @@ class ForceDirectedGraph{
 
     setGraph(){
       if (typeof(this.selectedGraph) != "undefined"){
-        console.log("current graph: ", )
+        console.log("current graph: ", this.graph);
+        this.graph = undefined;
         this.graph = this.selectedGraph;
+        console.log("new graph: ", this.graph);
       }
     }
 
@@ -94,9 +97,9 @@ export default angular.module(name, [
     uiRouter
 ]).directive(name, function () {
     //constants
-    var width = 800;
+    var opwidth = 960;
     var margin = 20;
-    var height = 600 - margin;
+    var opheight = 700 - margin;
 
     return {
         restrict: "E",
@@ -116,6 +119,8 @@ export default angular.module(name, [
 
             scope.$watch("forceDirectedGraph.graph", function (newval, oldval) {
               if(typeof(newval) != "undefined" && newval !== oldval){
+                console.log("found a new graph");
+                console.log("I *should* be updating the layout...");
                 updateLayout();
               }
             }, true);
@@ -138,10 +143,10 @@ export default angular.module(name, [
               if (typeof(newval) != "undefined") {
                 console.log("have a new selectedGraph: ", scope.forceDirectedGraph.selectedGraph);
                 scope.forceDirectedGraph.setGraph();
+                updateLayout();
               }
 
             });
-
 
             scope.$watch("loadedGraphs", function (newval, oldval) {
 
@@ -159,8 +164,6 @@ export default angular.module(name, [
               }
 
               if(typeof(scope.forceDirectedGraph.networks) != "undefined") {
-                console.log("here are the networks: ", scope.forceDirectedGraph.networks);
-                console.log("here is the newval: ", newval);
                 var foundnet = false;
                 for (var i = 0; i < scope.forceDirectedGraph.networks.length; i++){
                   var curnet = scope.forceDirectedGraph.networks[i];
@@ -181,17 +184,118 @@ export default angular.module(name, [
               }
             }, true);
 
-            var vis = d3.select(element[0])
-                        .append("svg")
-                        .attr("width", width)
-                        .attr("height", height + margin + 100);
-
             var updateLayout = function () {
 
-              console.log("I'm in updatedsomething");
-              console.log("nodes: ", scope.forceDirectedGraph.graph.getNodes());
+              function findNeighbors(d, i) {
+                var neighborArray = [d];
+                var linkArray = [];
+                var allLinks = d3.selectAll("line").filter(function(p) {
+                  return p.source == d || p.target == d;
+                }).each(function (p) {
+                  neighborArray.indexOf(p.source) == -1 ? neighborArray.push(p.source) : null;
+                  neighborArray.indexOf(p.target) == -1 ? neighborArray.push(p.target) : null;
+                  linkArray.push(p)
+                })
+                return {"nodes":neighborArray, "links":linkArray}
+              }
 
-              if (typeof(scope.forceDirectedGraph.graph) != "undefined") {
+              function highlightNeigbors(d, i) {
+                var nodeNeighbors = findNeighbors(d, i);
+                d3.selectAll("circle").each(function (p) {
+                  var isNeighbor = nodeNeighbors.nodes.indexOf(p);
+                  d3.select(this)
+                    .style("opacity", isNeighbor > -1 ? 1 : 0.25)
+                    .style("stroke-width", isNeighbor > -1 ? 3 : 1)
+                    .style("stroke", isNeighbor > -1 ? "blue" : "white");
+                });
+
+                d3.selectAll("line").each(function (p) {
+                  var isNeighborLinks = nodeNeighbors.links.indexOf(p);
+                  d3.select(this)
+                    .style("opacity", isNeighborLinks > -1 ? 1 : 0.25)
+                    .style("stroke-width", isNeighborLinks > -1 ? 2 : 1)
+                    .style("stroke", isNeighborLinks > -1 ? "blue" : "#ccc");
+                });
+              }
+
+              function nodeOver(d, i, e) {
+                var element = this;
+                if (!d3.event.fromElement) {
+                  element = e;
+                }
+
+                console.log("element: ", element);
+                console.log("d: ", d);
+                console.log("d.gene", d.gene);
+
+                element.parentNode.appendChild(element);
+                d3.select(element)
+                  .append("text")
+                  .attr("class", "hoverLabel")
+                  .attr("stroke", "white")
+                  .attr("stroke-width", "5px")
+                  .style("opacity", 0.9)
+                  .style("pointer-events", "none")
+                  .text(d.gene);
+
+                d3.select(element)
+                  .append("text")
+                  .attr("class", "hoverLabel")
+                  .style("stroke", "black")
+                  .style("fill", "black")
+                  .text(d.gene);
+
+                highlightNeigbors(d,i);
+
+                console.log("element at end: ", element);
+              }
+
+              function nodeOut() {
+                d3.selectAll(".hoverLabel").remove();
+
+                d3.selectAll("circle")
+                  .style("opacity", 1)
+                  .style("stroke", "none");
+
+
+                d3.selectAll("line")
+                  .style("opacity", 0.25)
+                  .style("stroke", "#ccc");
+
+              }
+
+              console.log("here is vis: ", vis);
+
+              width = opwidth;
+              height = opheight;
+
+
+              d3.selectAll("svg").remove();
+
+              var vis = d3.select(element[0])
+                          .append("svg")
+                          .attr("width", width)
+                          .attr("height", height + margin + 100)
+                          .attr("pointer-events", "all")
+                          .call(d3.behavior.zoom().on("zoom", rescale))
+                          .on("dblclick.zoom", null)
+                          .append("svg:g")
+                          .on("mousedown", mousedown);
+
+            function mousedown() {
+              vis.call(d3.behavior.zoom().on("zoom"), rescale);
+              resize();
+              return;
+            }
+
+              function rescale() {
+                var trans = d3.event.translate;
+                var scle = d3.event.scale;
+
+                vis.attr("transform", "translate(" + trans + ")" + "scale(" + scle + ")");
+              }
+
+              console.log("I'm in updatedsomething");
 
                 var colors = d3.scale.category10();
 
@@ -207,6 +311,7 @@ export default angular.module(name, [
                               .enter()
                               .append("line")
                               .style("stroke", "#ccc")
+                              .style("opacity", 0.25)
                               .style("stroke-width",function (d) {
                                   return d.weight;
                               });
@@ -216,7 +321,9 @@ export default angular.module(name, [
                               .enter()
                               .append("circle")
                               .attr("r", 5)
-                              .style("fill", function (d) { return colors(d.group_id)});
+                              .style("fill", function (d) { return colors(d.group_id)})
+                              .on("mouseover", nodeOver)
+                              .on("mouseout", nodeOut);
 
 
                 var node_struc = scope.forceDirectedGraph.graph.getNodeStructure();
@@ -246,12 +353,23 @@ export default angular.module(name, [
                       .attr("dy", ".35em")
                       .style("text-anchor", "end").text(function (d) {return d.group;});
 
+                force.on("tick", ticked);
+
+                force.start();
+
+                function ticked () {
+                          edge.attr("x1", function (d) { return d.source.x })
+                              .attr("y1", function (d) { return d.source.y })
+                              .attr("x2", function (d) { return d.target.x })
+                              .attr("y2", function (d) { return d.target.y });
+
+                          node.attr("cx", function (d) { return d.x })
+                              .attr("cy", function (d) { return d.y });
+
                 d3.select(window).on("resize", resize);
 
-                function resize() {
 
-                  opwidth = 800;
-                  opheight = 600;
+                function resize() {
 
                   if (window.innerWidth < opwidth) {
                     width = window.innerWidth;
@@ -294,20 +412,9 @@ export default angular.module(name, [
                         .style("text-anchor", "end").text(function (d) {return d.group;});
                 }
 
-                force.on("tick", ticked);
 
-                force.start();
 
-                function ticked () {
-                    edge.attr("x1", function (d) { return d.source.x })
-                        .attr("y1", function (d) { return d.source.y })
-                        .attr("x2", function (d) { return d.target.x })
-                        .attr("y2", function (d) { return d.target.y });
 
-                    node.attr("cx", function (d) { return d.x })
-                        .attr("cy", function (d) { return d.y });
-
-                }
             }
           };
         }
