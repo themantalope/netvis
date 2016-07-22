@@ -99,7 +99,7 @@ export default angular.module(name, [
     //constants
     var opwidth = 960;
     var margin = 20;
-    var opheight = 700 - margin;
+    var opheight = 650 - margin;
 
     return {
         restrict: "E",
@@ -201,13 +201,6 @@ export default angular.module(name, [
 
               function highlightNeigbors(d, i) {
                 var nodeNeighbors = findNeighbors(d, i);
-                d3.selectAll("circle").each(function (p) {
-                  var isNeighbor = nodeNeighbors.nodes.indexOf(p);
-                  d3.select(this)
-                    .style("opacity", isNeighbor > -1 ? 1 : 0.25)
-                    .style("stroke-width", isNeighbor > -1 ? 3 : 1)
-                    .style("stroke", isNeighbor > -1 ? "blue" : "white");
-                });
 
                 d3.selectAll("line").each(function (p) {
                   var isNeighborLinks = nodeNeighbors.links.indexOf(p);
@@ -216,44 +209,85 @@ export default angular.module(name, [
                     .style("stroke-width", isNeighborLinks > -1 ? 2 : 1)
                     .style("stroke", isNeighborLinks > -1 ? "blue" : "#ccc");
                 });
+
+
+                d3.selectAll(".circle").each(function (p) {
+                  var isNeighbor = nodeNeighbors.nodes.indexOf(p);
+                  d3.select(this)
+                    .style("opacity", isNeighbor > -1 ? 1 : 0.25)
+                    .style("stroke-width", isNeighbor > -1 ? 3 : 1)
+                    .style("stroke", isNeighbor > -1 ? "blue" : "white");
+
+                  if (isNeighbor > -1) {
+                    console.log("'this' in highlightNeigbors: ", this);
+                    console.log("should be appending text...");
+                    d3.select(this)
+                      .append("g")
+                      .attr("class", "hoverLabel")
+                      .append("text")
+                      .attr("stroke", "white")
+                      .attr("stroke-width", "5px")
+                      .attr("x", p.x)
+                      .attr("y", p.y)
+                      .attr("dx", 12)
+                      .attr("dy", ".35em")
+                      .style("opacity", 0.9)
+                      .style("pointer-events", "none")
+                      .style("font-size", "10px")
+                      .text(p.gene);
+
+                    d3.select(this)
+                      .append("g")
+                      .attr("class", "hoverLabel")
+                      .append("text")
+                      .attr("class", "hoverLabel")
+                      .attr("x", p.x)
+                      .attr("y", p.y)
+                      .attr("dx", 12)
+                      .attr("dy", ".35em")
+                      .style("stroke", "black")
+                      .style("stroke-width", 1)
+                      .style("font-size", "10px")
+                      .text(p.gene);
+
+                      console.log("'this' after things should be appended: ", this);
+                  }
+                });
+
               }
 
               function nodeOver(d, i, e) {
-                var element = this;
-                if (!d3.event.fromElement) {
-                  element = e;
-                }
-
-                console.log("element: ", element);
-                console.log("d: ", d);
-                console.log("d.gene", d.gene);
-
-                element.parentNode.appendChild(element);
-                d3.select(element)
-                  .append("text")
-                  .attr("class", "hoverLabel")
-                  .attr("stroke", "white")
-                  .attr("stroke-width", "5px")
-                  .style("opacity", 0.9)
-                  .style("pointer-events", "none")
-                  .text(d.gene);
-
-                d3.select(element)
-                  .append("text")
-                  .attr("class", "hoverLabel")
-                  .style("stroke", "black")
-                  .style("fill", "black")
-                  .text(d.gene);
+                // var element = this;
+                // var intext = d.gene;
+                //
+                // element.parentNode.appendChild(element);
+                // d3.select(element)
+                //   .data({})
+                //   .enter()
+                //   .append("text")
+                //   .attr("class", "hoverLabel")
+                //   .attr("stroke", "white")
+                //   .attr("stroke-width", "5px")
+                //   .style("opacity", 0.9)
+                //   .style("pointer-events", "none")
+                //   .text(intext);
+                //
+                // d3.select(element)
+                //   .append("text")
+                //   .attr("class", "hoverLabel")
+                //   .attr("dx", 12)
+                //   .attr("dy", ".35em")
+                //   .style("stroke", "black")
+                //   .text(intext);
 
                 highlightNeigbors(d,i);
-
-                console.log("element at end: ", element);
+                // console.log("element: ", element);
               }
 
               function nodeOut() {
                 d3.selectAll(".hoverLabel").remove();
 
-                d3.selectAll("circle")
+                d3.selectAll(".circle")
                   .style("opacity", 1)
                   .style("stroke", "none");
 
@@ -316,9 +350,13 @@ export default angular.module(name, [
                                   return d.weight;
                               });
 
-                var node = vis.selectAll("circle")
+                var node = vis.selectAll("svg")
+                              .append("g")
+                              .attr("class", "circles")
                               .data(scope.forceDirectedGraph.graph.getNodes())
                               .enter()
+                              .append("g")
+                              .attr("class", "circle")
                               .append("circle")
                               .attr("r", 5)
                               .style("fill", function (d) { return colors(d.group_id)})
