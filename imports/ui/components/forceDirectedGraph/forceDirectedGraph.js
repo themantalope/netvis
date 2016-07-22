@@ -22,7 +22,6 @@ class ForceDirectedGraph{
 
         $scope.loadedGraphs = this.loadedGraphs;
 
-
         this.helpers({
             networks(){
                 return Networks.find({}, {fields: {name:1, url:1}});
@@ -30,36 +29,47 @@ class ForceDirectedGraph{
         });
 
         $scope.networks = this.networks;
+        this.selectedNetFile = undefined;
+        this.selectedNetworkLabel = undefined;
+        this.selectedNetworkIndex = undefined;
+        this.selectedGraph = undefined;
 
     }
 
     loadNetwork(){
+      if (this.networks.length > 0){
+        if(typeof(this.selectedNetFile) != "undefined"){
+          var theneturl = this.selectedNetFile.url;
 
-        if (this.networks.length > 0){
-          if(typeof(this.selectedNetFile) != "undefined"){
-            var theneturl = this.selectedNetFile.url;
+          console.log("here is theneturl: ", theneturl);
 
-            console.log("here is theneturl: ", theneturl);
+          this.graphLoader = new MultiGraphJSONLoader(theneturl);
 
-            this.graphLoader = new MultiGraphJSONLoader(theneturl);
+          var weakme = this;
 
-            var weakme = this;
+          this.graphLoader.loadJSON(function (multigraph) {
 
-            this.graphLoader.loadJSON(function (multigraph) {
-
-                weakme.multiGraph = multigraph;
-                weakme.graph = weakme.multiGraph.getGraphForMatrix(0);
-                weakme.loadedGraphs = true;
-
-                if (weakme.loadedGraphs) {
-                    weakme.updateStuff();
-                }
-
-            });
-          }
-        } else {
-            // console.log("no network files were found.");
+              weakme.multiGraph = multigraph;
+              weakme.loadedGraphs = true;
+              weakme.allGraphs = weakme.multiGraph.getAllGraphs();
+          });
         }
+      }
+    }
+
+    setSelectedGraphIndex(){
+      if (typeof(this.selectedNetworkIndex) != "undefined" && typeof(this.multiGraph) != "undefined") {
+        this.selectedNetworkIndex = this.multiGraph.getGraphIndexForLabel(this.selectedNetworkLabel);
+        console.log("this.selectedNetworkLabel: ", this.selectedNetworkLabel);
+        console.log("this.selectedNetworkIndex: ", this.selectedNetworkIndex);
+      }
+    }
+
+    setGraph(){
+      if (typeof(this.selectedGraph) != "undefined"){
+        console.log("current graph: ", )
+        this.graph = this.selectedGraph;
+      }
     }
 
     updateStuff(){
@@ -97,11 +107,6 @@ export default angular.module(name, [
         scope: true,
         link: function (scope, element, attrs) {
 
-            console.log("scope inside link function: ", scope);
-            console.log("element inside link function: ", element);
-            console.log("attrs inside link function: ", attrs);
-            console.log("scope.forceDirectedGraph.selectedNetFile: ", scope.forceDirectedGraph.selectedNetFile);
-
             scope.$watch("links", function(newval, oldval){
                 scope.links = newval;
             });
@@ -110,12 +115,32 @@ export default angular.module(name, [
             });
 
             scope.$watch("forceDirectedGraph.graph", function (newval, oldval) {
-              if(typeof(newval) != "undefined"){
-                updatedsomething();
+              if(typeof(newval) != "undefined" && newval !== oldval){
+                updateLayout();
+              }
+            }, true);
+
+            scope.$watch("forceDirectedGraph.selectedNetworkLabel", function(newval, oldval) {
+              if (typeof(newval) != "undefined"){
+                console.log("have a new network label: ", newval);
+                scope.forceDirectedGraph.setSelectedGraphIndex();
+              }
+            }, true);
+
+            scope.$watch("forceDirectedGraph.selectedNetworkIndex", function(newval, oldval) {
+              if (typeof(newval) != "undefined") {
+                console.log("have a new network index: ", newval);
+                scope.forceDirectedGraph.setGraph();
+              }
+            }, true);
+
+            scope.$watch("forceDirectedGraph.selectedGraph", function (newval, oldval) {
+              if (typeof(newval) != "undefined") {
+                console.log("have a new selectedGraph: ", scope.forceDirectedGraph.selectedGraph);
+                scope.forceDirectedGraph.setGraph();
               }
 
-
-            }, true);
+            });
 
 
             scope.$watch("loadedGraphs", function (newval, oldval) {
@@ -123,7 +148,7 @@ export default angular.module(name, [
                 if (scope.forceDirectedGraph.loadedGraphs){
                     console.log("I'm about to execute update stuff...");
                     scope.forceDirectedGraph.updateStuff();
-                    updatedsomething();
+                    updateLayout();
                 }
 
             }, true);
@@ -161,12 +186,12 @@ export default angular.module(name, [
                         .attr("width", width)
                         .attr("height", height + margin + 100);
 
-            var updatedsomething = function () {
+            var updateLayout = function () {
 
               console.log("I'm in updatedsomething");
               console.log("nodes: ", scope.forceDirectedGraph.graph.getNodes());
 
-              if (scope.forceDirectedGraph.graph) {
+              if (typeof(scope.forceDirectedGraph.graph) != "undefined") {
 
                 var colors = d3.scale.category10();
 
@@ -174,8 +199,8 @@ export default angular.module(name, [
                               .size([width, height])
                               .nodes(scope.forceDirectedGraph.graph.getNodes())
                               .links(scope.forceDirectedGraph.graph.getLinks())
-                              .linkDistance([20])        // <-- New!
-                              .charge([-80]);
+                              .linkDistance([40])        // <-- New!
+                              .charge([-120]);
 
                 var edge = vis.selectAll("line")
                               .data(scope.forceDirectedGraph.graph.getLinks())
@@ -239,7 +264,7 @@ export default angular.module(name, [
                   } else {
                     height = opheight;
                   }
-                  
+
                   vis.attr("width", width)
                      .attr("height", height);
                   force.size([width, height]).resume();

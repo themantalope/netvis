@@ -40,24 +40,10 @@ class MultiGraph {
         var tnodes = nodedata.nodes;
         var max_depth = nodedata.max_depth;
         var global_struc = nodedata.structure;
+        var tmatricies = this._processMatricies(matricies, tnodes.length);
+        console.log("tmatricies: ", tmatricies);
 
-        var tmatricies = [];
-        for(var i = 0; i < matricies.length; i++){
-            var curmat = matricies[i].data;
-            var matsize = curmat.length;
 
-            if (matsize != tnodes.length){
-                throw "The number of nodes must be the same as the number of rows and columns in the matricies!"
-            }
-
-            for (var j=0; j < curmat.length; j++){
-                if (curmat[j].length != tnodes.length) {
-                    throw "The number of nodes must be the same as the number of rows and columns in the matricies!"
-                }
-            }
-            tmatricies.push(curmat)
-
-        }
 
         _nodes.set(this, tnodes);
         _matricies.set(this, tmatricies);
@@ -75,19 +61,83 @@ class MultiGraph {
         return _nodes.get(this);
     }
 
-    numNodes() {
+    getNumNodes() {
         return _nodes.get(this).length;
     }
 
 
-    numGraphs() {
+    getNumGraphs() {
         return _matricies.get(this).length;
     }
 
-    nodeStructure() {
+    getNodeStructure() {
         return _global_node_structure.get(this);
     }
 
+    /*
+    *
+    * This function will return a list of links based on the matrix index. The list will be formatted such that each
+    * entry will be of the form {"source":, "target":}, which is compatible with the D3 plotting library.
+    *
+    * @param {matrix_index} - the index of the matrix for which the link list is to be generated.
+    * */
+    getGraphForMatrix(matrix_index){
+        var allmats = _matricies.get(this);
+        var curmat = allmats[matrix_index].adjacency;
+        var curlabel = allmats[matrix_index].label;
+        var nodes = this.getNodes();
+        var ns = this.getNodeStructure();
+
+        return new Graph(nodes, curmat, ns, curlabel);
+    }
+
+    getAllGraphs(){
+      var allgraphs = [];
+      for (var i = 0; i < _matricies.get(this).length; i++) {
+        allgraphs.push(this.getGraphForMatrix(i));
+      }
+
+      return allgraphs;
+    }
+
+    getGraphIndexForLabel(label){
+      var allmats = _matricies.get(this);
+      var idx;
+      for (var i = 0; i < allmats.length; i++){
+        if (allmats[i].label == label){
+          idx = i;
+          break;
+        }
+      }
+
+      return idx;
+    }
+
+    _processMatricies(matricies, nNodes){
+      var tmatricies = [];
+      for(var i = 0; i < matricies.length; i++){
+        var curmat = matricies[i].data;
+        var matsize = curmat.length;
+
+        if (matsize != nNodes){
+            throw "The number of nodes must be the same as the number of rows and columns in the matricies!"
+        }
+
+        for (var j=0; j < curmat.length; j++){
+            if (curmat[j].length != nNodes) {
+                throw "The number of nodes must be the same as the number of rows and columns in the matricies!"
+            }
+        }
+
+        var curlabel = i;
+
+        if ( "label" in matricies[i] ){
+          curlabel = matricies[i].label;
+        }
+        tmatricies.push({"adjacency":curmat, "label":curlabel})
+      }
+      return tmatricies;
+    }
     /*
     * This is a private function which processes the input node list. Will automatically add an "index" to the node if
     * it does not exist (will add in the order in which the node appeared).
@@ -178,21 +228,7 @@ class MultiGraph {
 
     }
 
-    /*
-    *
-    * This function will return a list of links based on the matrix index. The list will be formatted such that each
-    * entry will be of the form {"source":, "target":}, which is compatible with the D3 plotting library.
-    *
-    * @param {matrix_index} - the index of the matrix for which the link list is to be generated.
-    * */
-    getGraphForMatrix(matrix_index){
-        var allmats = _matricies.get(this);
-        var curmat = allmats[matrix_index];
-        var nodes = this.getNodes();
-        var ns = this.nodeStructure();
 
-        return new Graph(nodes, curmat, ns);
-    }
 
 }
 

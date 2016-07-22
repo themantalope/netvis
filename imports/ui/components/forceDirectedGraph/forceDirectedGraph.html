@@ -10,3 +10,9 @@
     <option value="">Choose Network File</option>
   </select>
 </div>
+<div>
+  <span>Select Network: </span>
+  <select ng-model="forceDirectedGraph.selectedGraph" ng-options="graph.getLabel() for graph in forceDirectedGraph.allGraphs" ng-placeholer="Select Network">
+    <option value="">Select Network</option>
+  </select>
+</div>
