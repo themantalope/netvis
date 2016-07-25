@@ -186,8 +186,9 @@ export default angular.module(name, [
 
 
                 if (text !== "" && text !== null){
+                  nodeOut();
                   d3.selectAll(".circle").each(function(p) {
-                    var matched = p.gene === text || p.id === text;
+                    var matched = text === p.gene || text === p.id;
                     if (matched) {
                       highlightNeigbors(p);
                     }
@@ -266,6 +267,7 @@ export default angular.module(name, [
               }
 
               function nodeOver(d, i, e) {
+                nodeOut();
                 highlightNeigbors(d,i);
               }
 
