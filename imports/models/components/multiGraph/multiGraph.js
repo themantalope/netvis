@@ -1,4 +1,3 @@
-// "use strict";
 /**
  * This is the class which holds on to the multi layer network, and will have some extra functionality for creating
  * new subgraphs based on other data from either the node or link data.
@@ -10,6 +9,7 @@ let _nodes = new WeakMap();
 let _matricies = new WeakMap();
 let _max_group_depth = new WeakMap();
 let _global_node_structure = new WeakMap();
+let _current_node_depth = new WeakMap();
 
 
 class MultiGraph {
@@ -41,7 +41,6 @@ class MultiGraph {
         var max_depth = nodedata.max_depth;
         var global_struc = nodedata.structure;
         var tmatricies = this._processMatricies(matricies, tnodes.length);
-        console.log("tmatricies: ", tmatricies);
 
 
 
@@ -144,7 +143,7 @@ class MultiGraph {
     * @param {nodes} - The node list to process.
     * */
     _processNodes(nodes){
-      var node_struc_data = this._determineGlobalNodeStructure(nodes);
+
       var tnodes = [];
       //add the nodes to the object's node array
       for (var i = 0; i < nodes.length; i++){
@@ -156,6 +155,8 @@ class MultiGraph {
             tnodes.push(curnode)
           }
       }
+
+      var node_struc_data = this._determineGlobalNodeStructure(nodes);
 
       //sort the node list based on the index values
       tnodes.sort(function(first, second){
@@ -186,10 +187,23 @@ class MultiGraph {
     * */
     _determineGlobalNodeStructure(nodes){
 
+
+      var structure_list = [];
+
       var structure = {"level":0, "groups":[]};
       var group_id_keys = {};
       var group_counter = 0;
       var max_depth = 0;
+
+
+      for (var i = 0; i < nodes.length; i++){
+        var obj = nodes[i];
+        var curdepth = 0;
+
+        if("group" in obj) { //make sure the node has a group property
+
+        }
+      }
 
       for (var i = 0; i < nodes.length; i++){
           var obj = nodes[i];

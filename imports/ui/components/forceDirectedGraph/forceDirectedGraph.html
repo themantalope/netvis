@@ -16,3 +16,6 @@
     <option value="">Select Network</option>
   </select>
 </div>
+<div>Search For Node (input gene name or ID):
+  <input type="text" ng-model="geneSearch" placeholder="Search For Gene Here" ng-keypress="($event.charCode===13)?forceDirectedGraph.setSearchedGene(geneSearch) : return;"/>
+</div>

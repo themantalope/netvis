@@ -58,6 +58,17 @@ class Graph{
     getLabel(){
       return _label.get(this);
     }
+
+
+    getHierarchicalGraph(nodeStructureLevel){
+      //first get the nodes and the current links
+      var nodes = _nodes.get(this);
+      var links = _links.get(this);
+      var nodeStructure = _node_structure.get(this);
+      var nsLevel;
+      
+
+    }
 }
 
 export { Graph }
