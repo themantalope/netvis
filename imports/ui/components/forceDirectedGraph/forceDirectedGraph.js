@@ -292,10 +292,11 @@ export default angular.module(name, [
 
               d3.selectAll("svg").remove();
 
-              var vis = d3.select(element[0])
+              var vis = d3.select("#fdl")
                           .append("svg")
                           .attr("width", width)
                           .attr("height", height + margin + 100)
+                          .style("border", "2px solid black")
                           .attr("pointer-events", "all")
                           .call(d3.behavior.zoom().on("zoom", rescale))
                           .on("dblclick.zoom", null)

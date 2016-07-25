@@ -1,5 +1,3 @@
-<p>This is a page for a force directed graph, plotted with D3.</p>
-<!--<div ng-model="forceDirectedGraph.graph">Hello there I have "graph" as ng-model...</div>-->
 <network-upload files="networkUpload.networkFileSrc"></network-upload>
 <br>
 <br>
@@ -19,3 +17,4 @@
 <div>Search For Node (input gene name or ID):
   <input type="text" ng-model="geneSearch" placeholder="Search For Gene Here" ng-keypress="($event.charCode===13)?forceDirectedGraph.setSearchedGene(geneSearch) : return;"/>
 </div>
+<div id="fdl" align="center"></div>
