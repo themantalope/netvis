@@ -188,8 +188,9 @@ export default angular.module(name, [
                 if (text !== "" && text !== null){
                   d3.selectAll(".circle").each(function(p) {
                     var matched = p.gene === text || p.id === text;
-                    d3.select(this)
-                      .attr("opacity", matched ? 1.0 : 0.25);
+                    if (matched) {
+                      highlightNeigbors(p);
+                    }
                   });
                 }
               }
@@ -326,7 +327,7 @@ export default angular.module(name, [
                               .links(scope.forceDirectedGraph.graph.getLinks())
                               .linkDistance([40])        // <-- New!
                               .charge([-200])
-                              .friction(0.5);
+                              .friction(0.5).start();
 
                 var edge = vis.selectAll("line")
                               .data(scope.forceDirectedGraph.graph.getLinks())
@@ -384,7 +385,7 @@ export default angular.module(name, [
 
                 force.on("tick", ticked);
 
-                force.start();
+
 
                 function ticked () {
                           edge.attr("x1", function (d) { return d.source.x })
@@ -397,12 +398,15 @@ export default angular.module(name, [
 
                 d3.select(window).on("resize", resize);
 
-                if (typeof(scope.forceDirectedGraph.searchedGene) !== "undefined") {
+                if (typeof(scope.forceDirectedGraph.searchedGene) === "string") {
+                  console.log("scope.forceDirectedGraph.searchedGene:", scope.forceDirectedGraph.searchedGene);
+                  force.stop();
                   highlightSearchedGene(scope.forceDirectedGraph.searchedGene);
                 } else {
                   d3.selectAll(".circle")
                     .attr("opacity", 1.0);
                 }
+
 
 
                 function resize() {
