@@ -38,7 +38,6 @@ class MultiGraph {
     constructor(nodes, matricies){
         var nodedata = this._processNodes(nodes);
         var tnodes = nodedata.nodes;
-        var max_depth = nodedata.max_depth;
         var global_struc = nodedata.structure;
         var tmatricies = this._processMatricies(matricies, tnodes.length);
 
@@ -46,7 +45,6 @@ class MultiGraph {
 
         _nodes.set(this, tnodes);
         _matricies.set(this, tmatricies);
-        _max_group_depth.set(this, max_depth);
         _global_node_structure.set(this, global_struc);
 
 
@@ -164,20 +162,30 @@ class MultiGraph {
       });
 
       //check the depth of "group" within the nodes
-      var group_ids = node_struc_data.group_ids;
+      var node_struc_list = node_struc_data.structure;
 
-      if (!_.isEmpty(group_ids)){
-        for (var i = 0; i < tnodes.length; i++){
-          tnodes[i].group_id = group_ids[tnodes[i].group];
+      for (var i = 0; i < node_struc_list.length; i++) {
+        var group_idx = i;
+        var group_name = node_struc_list[i].name;
+        var group_nodes = node_struc_list[i].nodes;
+
+        for(var k = 0; k < group_nodes.length; k++){
+          var cur_idx = group_nodes[k];
+
+          for (var j = 0; j < tnodes.length; j++){
+            if(tnodes[j].index === cur_idx) {
+              tnodes[j]["group"] = group_name;
+              tnodes[j]["group_id"] = group_idx;
+              break;
+            }
+          }
         }
       }
 
 
 
       return {"nodes":tnodes,
-              "max_depth":node_struc_data.max_depth,
-              "structure":node_struc_data.structure,
-              "group_ids":node_struc_data.group_ids};
+              "structure":node_struc_data.structure};
     }
     /*
     * This function determines the ultimate hierarchy of the nodes, based on what is in the group.
@@ -185,61 +193,77 @@ class MultiGraph {
     * @param {identifer} - this should be some sort of identifier that allows for a label to be had, should be present
     * within the node "group" structure
     * */
-    _determineGlobalNodeStructure(nodes){
+    _determineGlobalNodeStructure(nodes, delimiter = ":"){
 
 
       var structure_list = [];
-
-      var structure = {"level":0, "groups":[]};
       var group_id_keys = {};
       var group_counter = 0;
-      var max_depth = 0;
 
 
+      // here is what each group object will look like:
+      // {"name":, "subgroups":[], "nodes":[], "depth":}
       for (var i = 0; i < nodes.length; i++){
-        var obj = nodes[i];
+        var curnode = nodes[i];
         var curdepth = 0;
+        var obj = curnode.group;
 
-        if("group" in obj) { //make sure the node has a group property
+        if (typeof(obj) === "string") {
+          //now we need to start placing it into the right group
+          var obj_groups = obj.split(delimiter);
+          var has_obj = false;
+          var cur_group = obj_groups.shift();
+          var cur_structure_list = structure_list;
+          var didnt_find_group;
+          while((cur_group !== undefined) && !(_.isEmpty(cur_structure_list))) {
+            didnt_find_group = true;
 
-        }
-      }
+            for (var j = 0; j < cur_structure_list.length; j++) {
+              var group_struc = cur_structure_list[j];
+              if (cur_group === group_struc.name) {
 
-      for (var i = 0; i < nodes.length; i++){
-          var obj = nodes[i];
-          var curdepth = 0;
-          var curstructure = structure;
-
-          while(typeof(obj) === "object"){
-            if ("group" in obj){
-              if (!(obj.group in group_id_keys)) {
-                group_id_keys[obj.group] = group_counter;
-                group_counter ++;
+                cur_structure_list = group_struc.subgroups;
+                curdepth++;
+                cur_group = obj_groups.shift();
+                didnt_find_group = false;
+                if (cur_group === undefined) {
+                  group_struc.nodes.push(curnode.index);
+                }
+                break;
               }
+            }
 
-              if (curstructure.level == curdepth){
-
-                  if (curstructure.groups.indexOf(obj.group) === -1) {
-                      curstructure.groups.push(obj.group)
-                  }
-
-              }
-
-              obj = obj.group;
-              curstructure = curstructure.groups[obj.group];
-              curdepth++;
-              if (curdepth > max_depth){
-                  max_depth = curdepth;
-              }
+            if (didnt_find_group) {
+              break;
             }
           }
 
-          curdepth = 0;
+          if (obj_groups.length > 0) {
+            // add in the rest
+            while(obj_groups.length > 0){
+              cur_group = obj_groups.shift();
+              var new_dict = {"name":cur_group, "subgroups":[], "depth":curdepth, "nodes":[]};
+              if (obj_groups.length == 0) {
+                new_dict.nodes.push(curnode.index);
+              }
+              cur_structure_list.push(new_dict);
+              cur_structure_list = new_dict.subgroups;
+              curdepth++;
+            }
+          } else if (obj_groups.length === 0 && cur_group !== undefined) {
+            //make one newdict and add it to the list
+            var new_dict = {"name":cur_group, "subgroups":[], "depth":curdepth, "nodes":[curnode.index]};
+            cur_structure_list.push(new_dict);
+          }
+
+        } else if (typeof(obj) === undefined || typeof(obj) === null) {
+          continue;
+        }
+
 
       }
 
-      return {"structure":structure, "max_depth":max_depth, "group_ids":group_id_keys};
-
+      return {"structure":structure_list};
     }
 
 

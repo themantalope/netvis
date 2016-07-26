@@ -42,7 +42,6 @@ class ForceDirectedGraph{
         if(typeof(this.selectedNetFile) != "undefined"){
           var theneturl = this.selectedNetFile.url;
 
-          console.log("here is theneturl: ", theneturl);
 
           this.graphLoader = new MultiGraphJSONLoader(theneturl);
 
@@ -118,8 +117,6 @@ export default angular.module(name, [
 
             scope.$watch("forceDirectedGraph.selectedNetworkLabel", function(newval, oldval) {
               if (typeof(newval) !== "undefined" && newval !== oldval){
-                console.log("new network label: ", newval);
-                console.log("old network label: ", oldval);
                 scope.forceDirectedGraph.setSelectedGraphIndex();
               }
             }, true);
@@ -131,8 +128,6 @@ export default angular.module(name, [
             }, true);
 
             scope.$watch("forceDirectedGraph.selectedGraph", function (newval, oldval) {
-              console.log("selectedGraph new: ", newval);
-              console.log("selectedGraph old: ", oldval);
               if (typeof(newval) != "undefined" && newval !== oldval) {
                 scope.forceDirectedGraph.setGraph();
                 updateLayout();
@@ -143,11 +138,7 @@ export default angular.module(name, [
             scope.$watch("forceDirectedGraph.searchedGene", function (newval, oldval) {
 
               if(typeof(newval) !== "undefined"){
-                console.log("oldsearch: ", oldval, "newsearch: ", newval);
-                console.log("oldsearch === newsearch: ", newval === oldval);
-                console.log("oldsearch !== newsearch: ", newval !== oldval);
                 if (newval !== oldval) {
-                  console.log("here is the new searchedGene: ", newval);
                   updateLayout();
                   scope.geneSearch = null;
                 }
@@ -287,7 +278,6 @@ export default angular.module(name, [
 
               }
 
-              console.log("here is vis: ", vis);
 
               width = opwidth;
               height = opheight;
@@ -319,8 +309,6 @@ export default angular.module(name, [
                 vis.attr("transform", "translate(" + trans + ")" + "scale(" + scle + ")");
               }
 
-              console.log("I'm in updatedsomething");
-
                 var colors = d3.scale.category10();
 
                 var force = d3.layout.force()
@@ -329,7 +317,7 @@ export default angular.module(name, [
                               .links(scope.forceDirectedGraph.graph.getLinks())
                               .linkDistance([40])        // <-- New!
                               .charge([-200])
-                              .friction(0.5).start();
+                              .friction(0.9).start();
 
                 var edge = vis.selectAll("line")
                               .data(scope.forceDirectedGraph.graph.getLinks())
@@ -360,8 +348,8 @@ export default angular.module(name, [
 
                 var node_struc = scope.forceDirectedGraph.graph.getNodeStructure();
                 var group_id_arr = [];
-                for (var key in node_struc.groups) {
-                  group_id_arr.push({"group_id":key, "group":node_struc.groups[key]})
+                for (var i = 0; i < node_struc.length; i++){
+                  group_id_arr.push({"group_id":i, "group":node_struc[i].name});
                 }
 
                 var legend = vis.selectAll(".legend")
@@ -401,7 +389,6 @@ export default angular.module(name, [
                 d3.select(window).on("resize", resize);
 
                 if (typeof(scope.forceDirectedGraph.searchedGene) === "string") {
-                  console.log("scope.forceDirectedGraph.searchedGene:", scope.forceDirectedGraph.searchedGene);
                   force.stop();
                   highlightSearchedGene(scope.forceDirectedGraph.searchedGene);
                 } else {

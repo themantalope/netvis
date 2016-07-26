@@ -22,9 +22,8 @@ class MultiGraphJSONLoader{
     * This class loads and creates a MultiGraph object to use after parsing a JSON file.
     * @param {furl} - the URL of the json file with the network data
     * */
-    
+
     constructor(furl){
-        console.log("I'm about to start load json");
         this.dataLoaded = false;
         this.url = furl;
     }
@@ -51,7 +50,6 @@ class MultiGraphJSONLoader{
             var mg = new MultiGraph(nodes, matricies);
             _multiGraph.set(this, mg);
             this.dataLoaded = true;
-            console.log("json file loaded");
             callback(_multiGraph.get(this));
 
         });
