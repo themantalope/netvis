@@ -17,4 +17,20 @@
 <div>Search For Node (input gene name or ID):
   <input type="text" ng-model="geneSearch" placeholder="Search For Gene Here" ng-keypress="($event.charCode===13)?forceDirectedGraph.setSearchedGene(geneSearch) : return;"/>
 </div>
-<div id="fdl" align="center"></div>
+<div align="left">
+  <details ng-if="forceDirectedGraph.graph.getNodeStructure().length > 0">
+    <summary>Level 0 Groups</summary>
+    <summary>A second summary line</summary>
+    <ul>
+      <div ng-repeat="node_group in forceDirectedGraph.graph.getNodeStructure()">
+        <li ng-if="node_group.subgroups.length === 0">{{node_group.name}}</li>
+        <li ng-if="node_group.subgroups.length !== 0">
+
+        </li>
+      </div>
+    </ul>
+  </details>
+  <div align="center">
+    <div id="fdl" ></div>
+  </div>
+</div>

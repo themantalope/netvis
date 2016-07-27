@@ -173,6 +173,10 @@ export default angular.module(name, [
 
             var updateLayout = function () {
 
+              var graph = scope.forceDirectedGraph.graph;
+              var links = graph.getLinks();
+              var nodes = graph.getNodes();
+
               function highlightSearchedGene(text) {
 
 
@@ -313,14 +317,14 @@ export default angular.module(name, [
 
                 var force = d3.layout.force()
                               .size([width, height])
-                              .nodes(scope.forceDirectedGraph.graph.getNodes())
-                              .links(scope.forceDirectedGraph.graph.getLinks())
+                              .nodes(nodes)
+                              .links(links)
                               .linkDistance([40])        // <-- New!
                               .charge([-200])
                               .friction(0.9).start();
 
                 var edge = vis.selectAll("line")
-                              .data(scope.forceDirectedGraph.graph.getLinks())
+                              .data(links)
                               .enter()
                               .append("line")
                               .style("stroke", "#ccc")
@@ -332,7 +336,7 @@ export default angular.module(name, [
                 var node = vis.selectAll("svg")
                               .append("g")
                               .attr("class", "circles")
-                              .data(scope.forceDirectedGraph.graph.getNodes())
+                              .data(nodes)
                               .enter()
                               .append("g")
                               .attr("class", "circle")
@@ -346,7 +350,7 @@ export default angular.module(name, [
                               .on("mouseout", nodeOut);
 
 
-                var node_struc = scope.forceDirectedGraph.graph.getNodeStructure();
+                var node_struc = graph.getNodeStructure();
                 var group_id_arr = [];
                 for (var i = 0; i < node_struc.length; i++){
                   group_id_arr.push({"group_id":i, "group":node_struc[i].name});
