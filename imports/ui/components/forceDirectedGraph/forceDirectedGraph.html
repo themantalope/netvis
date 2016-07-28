@@ -20,7 +20,7 @@
 <div align="left">
   <details ng-if="forceDirectedGraph.graph.getNodeStructure().length > 0">
     <summary>Level 0 Groups</summary>
-    <summary>A second summary line</summary>
+    <button ng-click="forceDirectedGraph.getHierarchicalGraphFromCurrentGraph()">Make Hierarchical Graph</button>
     <ul>
       <div ng-repeat="node_group in forceDirectedGraph.graph.getNodeStructure()">
         <li ng-if="node_group.subgroups.length === 0">{{node_group.name}}</li>

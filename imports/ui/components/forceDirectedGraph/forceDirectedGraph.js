@@ -82,6 +82,14 @@ class ForceDirectedGraph{
       }
     }
 
+    getHierarchicalGraphFromCurrentGraph(){
+      if (this.graph !== undefined && this.graph !== null){
+        var hg =  this.graph.getHierarchicalGraph(0);
+        this.graph = hg;
+        this.selectedGraph = this.graph;
+      }
+    }
+
 
 }
 
@@ -113,7 +121,7 @@ export default angular.module(name, [
               if(typeof(newval) !== "undefined" && newval !== oldval){
                 updateLayout();
               }
-            }, true);
+            });
 
             scope.$watch("forceDirectedGraph.selectedNetworkLabel", function(newval, oldval) {
               if (typeof(newval) !== "undefined" && newval !== oldval){
@@ -211,7 +219,6 @@ export default angular.module(name, [
                   var isNeighborLinks = nodeNeighbors.links.indexOf(p);
                   d3.select(this)
                     .style("opacity", isNeighborLinks > -1 ? 1 : 0.25)
-                    .style("stroke-width", isNeighborLinks > -1 ? 2 : 1)
                     .style("stroke", isNeighborLinks > -1 ? "blue" : "#ccc");
                 });
 
@@ -277,8 +284,15 @@ export default angular.module(name, [
 
 
                 d3.selectAll("line")
-                  .style("opacity", 0.25)
-                  .style("stroke", "#ccc");
+                  .style("opacity", 0.45)
+                  .style("stroke", "#ccc")
+                  .style("stroke-width",function (d) {
+                    if ("nNodes" in d.source){
+                      return 50 * d.weight;
+                    } else {
+                      return d.weight;
+                    }
+                  });
 
               }
 
@@ -319,8 +333,20 @@ export default angular.module(name, [
                               .size([width, height])
                               .nodes(nodes)
                               .links(links)
-                              .linkDistance([40])        // <-- New!
-                              .charge([-200])
+                              .linkDistance(function (d, i) {
+                                if ("nNodes" in d.source){
+                                  return 5 * (1.0/d.weight);
+                                } else {
+                                  return 40;
+                                }
+                              })        // <-- New!
+                              .charge(function(d) {
+                                if ("nNodes" in d){
+                                  return -10 * d.nNodes**2.0;
+                                } else {
+                                  return -200;
+                                }
+                              })
                               .friction(0.9).start();
 
                 var edge = vis.selectAll("line")
@@ -328,9 +354,13 @@ export default angular.module(name, [
                               .enter()
                               .append("line")
                               .style("stroke", "#ccc")
-                              .style("opacity", 0.25)
+                              .style("opacity", 0.45)
                               .style("stroke-width",function (d) {
+                                if ("nNodes" in d.source){
+                                  return 50 * d.weight;
+                                } else {
                                   return d.weight;
+                                }
                               });
 
                 var node = vis.selectAll("svg")
@@ -343,9 +373,21 @@ export default angular.module(name, [
                               .append("circle")
                               .style("stroke", "white")
                               .style("stroke-width", "1px")
-                              .attr("r", 5)
+                              .attr("r", function(d) {
+                                if ("nNodes" in d) {
+                                  return d.nNodes;
+                                } else {
+                                  return 5;
+                                }
+                              })
                               .attr("opacity", 1.0)
-                              .style("fill", function (d) { return colors(d.group_id)})
+                              .style("fill", function (d) {
+                                if ("group_color" in d) {
+                                  return d.group_color;
+                                } else {
+                                  return colors(d.group_id);
+                                }
+                              })
                               .on("mouseover", nodeOver)
                               .on("mouseout", nodeOut);
 
@@ -353,7 +395,7 @@ export default angular.module(name, [
                 var node_struc = graph.getNodeStructure();
                 var group_id_arr = [];
                 for (var i = 0; i < node_struc.length; i++){
-                  group_id_arr.push({"group_id":i, "group":node_struc[i].name});
+                  group_id_arr.push({"group_id":i, "group":node_struc[i].name, "group_color":node_struc[i].group_color});
                 }
 
                 var legend = vis.selectAll(".legend")
@@ -368,7 +410,11 @@ export default angular.module(name, [
                       .attr("width", 18)
                       .attr("height", 18)
                       .style("fill", function(d) {
-                        return colors(d.group_id);
+                        if ("group_color" in d) {
+                          return d.group_color;
+                        } else {
+                          return colors(d.group_id);
+                        }
                       });
 
                 legend.append("text")

@@ -21,13 +21,13 @@ class Graph{
         _node_structure.set(this, node_structure);
 
         //now we need to process the adjacency matrix
-        var links = this._processAdjacency(adjacency);
+        var links = this._processAdjacency(adjacency, nodes);
         _links.set(this, links);
         _label.set(this, label);
 
     }
 
-    _processAdjacency(matrix) {
+    _processAdjacency(matrix, node_list) {
 
 //        console.log("here is the matrix: ", matrix);
 
@@ -35,7 +35,13 @@ class Graph{
         for (var i = 0; i < matrix.length; i++){
             for (var j = i; j < matrix[i].length; j++){
                 if (matrix[i][j] != 0){
-                    link_list.push({"source":i, "target":j, "weight":matrix[i][j]});
+                    var row_node = node_list.find(function(n) { return n.index === i});
+                    var col_node = node_list.find(function(n) { return n.index === j});
+                    // console.log("got a link");
+                    // console.log("i, j: ", i, j);
+                    // console.log("row_node: ", row_node);
+                    // console.log("col_node: ", col_node);
+                    link_list.push({"source":row_node, "target":col_node, "weight":matrix[i][j]});
                 }
             }
         }
@@ -67,51 +73,14 @@ class Graph{
       var nodeStructure = _node_structure.get(this);
       var nsLevel = nodeStructureLevel;
 
+
+
       //first, figure out which groups of nodes can go where
       //to do this, we need to collapse any node groups which are
       //deeper than the requested node structure level
       //
 
-      var recurseThroughSubgroupsAndGetNodes = function(startGroup, nsDepth){
-        for(var i = 0; i < startGroup.subgroups.length; i++){
-          var curSubgroup = startGroup.subgroups[i];
-          if (curSubgroup.depth > nsDepth) {
-            startGroup.nodes.concat(curSubgroup.nodes);
-          } else {
-            curSubgroup = recurseThroughSubgroupsAndGetNodes(curSubgroup, nsDepth);
-          }
-        }
-
-        return startGroup;
-      }
-
-      var addObjsToListWhoseDepthIsLessThanRequested = function(obj, obj_list, depth) {
-        if (obj.depth <= depth) {
-          obj_list.push(obj);
-        }
-
-        if (obj.subgroups.lenth > 0) {
-          for (var i = 0; i < obj.subgroups.length; i++){
-            var cursub = obj.subgroups[i];
-            addObjsToListWhoseDepthIsLessThanRequested(cursub, obj_list, depth);
-          }
-        }
-
-        return obj_list;
-      }
-
-      var new_node_structure_list = [];
-
-      for (var i = 0; i < nodeStructure.structure.length; i++) {
-        var currentStructure = nodeStructure.structure[i];
-        //recurse through and collect nodes whose depth is lower than the depth
-        //given
-        currentStructure = recurseThroughSubgroupsAndGetNodes(currentStructure, nsLevel);
-
-        //put any subgroup whose depth is less than nsLevel into the new_node_structure_list
-
-        addObjsToListWhoseDepthIsLessThanRequested(currentStructure, new_node_structure_list, nsLevel);
-      }
+      var new_node_structure_list = nodeStructure;
 
       //ok, now that we have a node structure list, we can start to make a graph;
       var link_matrix = [];
@@ -123,24 +92,42 @@ class Graph{
         }
       }
 
+      var total_possible_links;
+      var intergroup_links;
       for (let i=0; i < nodeNum; i++){
         var group_i = new_node_structure_list[i];
 
 
         for (let j = i + 1; j < nodeNum; j++){
           var group_j = new_node_structure_list[j];
-          var total_possible_links = group_i.nodes.length * group_j.nodes.length;
-          var intergroup_links = 0;
+          total_possible_links = (group_i.nodes.length * group_j.nodes.length);
+          intergroup_links = 0;
 
+
+          var cursource;
+          var curtarget;
           for(let k = 0; k < links.length; k++){
-            var cursource = links[k].source;
-            var curtarget = links[k].target;
+            // console.log("links[k]: ", links[k]);
+            cursource = links[k].source.index;
+            curtarget = links[k].target.index;
 
-            if((cursource in group_i.nodes && curtarget in group_j.nodes) ||
-               (curtarget in group_i.nodes && cursource in group_j.nodes)){
-                 intergroup_links += 1;
-               }
+            if((group_i.nodes.indexOf(cursource) > -1 && group_j.nodes.indexOf(curtarget) > -1) ||
+               (group_i.nodes.indexOf(curtarget) > -1 && group_j.nodes.indexOf(cursource) > -1)){
+
+                // console.log("group_i: ", group_i);
+                // console.log("group_j: ", group_j);
+                // console.log("links[k]: ", links[k]);
+                // console.log("nodes: ", nodes);
+
+                intergroup_links += 1.0;
+            }
           }
+          // console.log("calculated linkage between 2 groups");
+          // console.log("group_i: ", group_i);
+          // console.log("group_j: ", group_j);
+          // console.log("total_possible_links: ", total_possible_links);
+          // console.log("intergroup_links: ", intergroup_links );
+          // console.log("linkage rate: ", intergroup_links / total_possible_links);
 
           link_matrix[i][j] = intergroup_links / total_possible_links;
           link_matrix[j][i] = intergroup_links / total_possible_links;
@@ -151,10 +138,19 @@ class Graph{
       //node list
       var new_node_list = [];
       for (let i = 0; i < new_node_structure_list.length; i++){
-        new_node_list.push({"index":i, "group":new_node_structure_list[i].name})
+        var new_node = {"index":i, "group":new_node_structure_list[i].name, "group_id":i , "nNodes":new_node_structure_list[i].nodes.length};
+        if ("group_color" in nodes[0]) {
+          for (let j = 0; j < nodes.length; j++){
+            if (nodes[j].group === new_node.group) {
+              new_node.group_color = nodes[j].group_color;
+              break;
+            }
+          }
+        }
+        new_node_list.push(new_node);
       }
-
-      return new Graph(new_node_list, link_matrix, new_node_structure_list);
+      var newLabel = _label.get(this); + " - Hierarchical";
+      return new Graph(new_node_list, link_matrix, new_node_structure_list, label=newLabel);
     }
 }
 

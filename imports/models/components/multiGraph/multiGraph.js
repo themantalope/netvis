@@ -4,12 +4,14 @@
  */
 
 import { Graph } from "../graph/graph"
+import { NodeStructure } from "../nodeStructure/nodeStructure";
 
 let _nodes = new WeakMap();
 let _matricies = new WeakMap();
 let _max_group_depth = new WeakMap();
 let _global_node_structure = new WeakMap();
 let _current_node_depth = new WeakMap();
+let _node_structure = new WeakMap();
 
 
 class MultiGraph {
@@ -36,6 +38,8 @@ class MultiGraph {
     * versions will include support for sparse matrix formats.
     * */
     constructor(nodes, matricies){
+
+        _node_structure.set(this, new NodeStructure());
         var nodedata = this._processNodes(nodes);
         var tnodes = nodedata.nodes;
         var global_struc = nodedata.structure;
@@ -153,13 +157,13 @@ class MultiGraph {
             tnodes.push(curnode)
           }
       }
-
-      var node_struc_data = this._determineGlobalNodeStructure(nodes);
-
       //sort the node list based on the index values
       tnodes.sort(function(first, second){
-          return second.index - first.index;
+          return first.index - second.index;
       });
+      var node_struc_data = this._determineGlobalNodeStructure(nodes);
+
+
 
       //check the depth of "group" within the nodes
       var node_struc_list = node_struc_data.structure;
@@ -200,68 +204,24 @@ class MultiGraph {
       var group_id_keys = {};
       var group_counter = 0;
 
+      nodes.sort(function(first, second) {
+        return first.index - second.index;
+      });
+
+      var ns = _node_structure.get(this);
 
       // here is what each group object will look like:
       // {"name":, "subgroups":[], "nodes":[], "depth":}
       for (var i = 0; i < nodes.length; i++){
         var curnode = nodes[i];
-        var curdepth = 0;
-        var obj = curnode.group;
-
-        if (typeof(obj) === "string") {
-          //now we need to start placing it into the right group
-          var obj_groups = obj.split(delimiter);
-          var has_obj = false;
-          var cur_group = obj_groups.shift();
-          var cur_structure_list = structure_list;
-          var didnt_find_group;
-          while((cur_group !== undefined) && !(_.isEmpty(cur_structure_list))) {
-            didnt_find_group = true;
-
-            for (var j = 0; j < cur_structure_list.length; j++) {
-              var group_struc = cur_structure_list[j];
-              if (cur_group === group_struc.name) {
-
-                cur_structure_list = group_struc.subgroups;
-                curdepth++;
-                cur_group = obj_groups.shift();
-                didnt_find_group = false;
-                if (cur_group === undefined) {
-                  group_struc.nodes.push(curnode.index);
-                }
-                break;
-              }
-            }
-
-            if (didnt_find_group) {
-              break;
-            }
-          }
-
-          if (obj_groups.length > 0) {
-            // add in the rest
-            while(obj_groups.length > 0){
-              cur_group = obj_groups.shift();
-              var new_dict = {"name":cur_group, "subgroups":[], "depth":curdepth, "nodes":[]};
-              if (obj_groups.length == 0) {
-                new_dict.nodes.push(curnode.index);
-              }
-              cur_structure_list.push(new_dict);
-              cur_structure_list = new_dict.subgroups;
-              curdepth++;
-            }
-          } else if (obj_groups.length === 0 && cur_group !== undefined) {
-            //make one newdict and add it to the list
-            var new_dict = {"name":cur_group, "subgroups":[], "depth":curdepth, "nodes":[curnode.index]};
-            cur_structure_list.push(new_dict);
-          }
-
-        } else if (typeof(obj) === undefined || typeof(obj) === null) {
-          continue;
-        }
-
+        ns.addNodeToStructureList(curnode);
 
       }
+
+      _node_structure.set(this, ns);
+      structure_list = ns.getStructureList();
+
+
 
       return {"structure":structure_list};
     }
