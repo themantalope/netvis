@@ -298,6 +298,20 @@ export default angular.module(name, [
                     }
                   });
 
+                d3.select("#tooltip")
+                  .classed("hidden", true);
+
+              }
+
+              function nodeClick(d, i, e) {
+                d3.select("#tooltip")
+                  .style("left", d.x + "px")
+                  .style("top", d.y + "px")
+                  .select("#value")
+                  .text(d.delta_expression[graph.getLabel()]);
+
+                d3.select("#tooltip")
+                  .classed("hidden", false);
               }
 
 
