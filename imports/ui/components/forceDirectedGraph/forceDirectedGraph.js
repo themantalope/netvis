@@ -263,7 +263,7 @@ export default angular.module(name, [
                       .attr("dx", ".35em")
                       .attr("dy", ".35em")
                       .style("stroke", "black")
-                      .style("stroke-width", 1)
+                      .style("stroke-width", "0.5px")
                       .style("font-size", "10px")
                       .text(p.gene);
 
