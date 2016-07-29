@@ -103,9 +103,9 @@ export default angular.module(name, [
     uiRouter
 ]).directive(name, function () {
     //constants
-    var opwidth = 960;
+    var opwidth = 800;
     var margin = 20;
-    var opheight = 650 - margin;
+    var opheight = 560 - margin;
 
     return {
         restrict: "E",
@@ -118,24 +118,28 @@ export default angular.module(name, [
 
 
             scope.$watch("forceDirectedGraph.graph", function (newval, oldval) {
+              console.log("graph changed");
               if(typeof(newval) !== "undefined" && newval !== oldval){
                 updateLayout();
               }
             });
 
             scope.$watch("forceDirectedGraph.selectedNetworkLabel", function(newval, oldval) {
+              console.log("selectedNetworkLabel changed");
               if (typeof(newval) !== "undefined" && newval !== oldval){
                 scope.forceDirectedGraph.setSelectedGraphIndex();
               }
-            }, true);
+            });
 
             scope.$watch("forceDirectedGraph.selectedNetworkIndex", function(newval, oldval) {
+              console.log("selectedNetworkIndex changed");
               if (typeof(newval) !== "undefined") {
                 scope.forceDirectedGraph.setGraph();
               }
-            }, true);
+            });
 
             scope.$watch("forceDirectedGraph.selectedGraph", function (newval, oldval) {
+              console.log("selectedGraph changed");
               if (typeof(newval) != "undefined" && newval !== oldval) {
                 scope.forceDirectedGraph.setGraph();
                 updateLayout();
@@ -144,7 +148,7 @@ export default angular.module(name, [
 
 
             scope.$watch("forceDirectedGraph.searchedGene", function (newval, oldval) {
-
+              console.log("searchedGene changed");
               if(typeof(newval) !== "undefined"){
                 if (newval !== oldval) {
                   updateLayout();
@@ -288,7 +292,7 @@ export default angular.module(name, [
                   .style("stroke", "#ccc")
                   .style("stroke-width",function (d) {
                     if ("nNodes" in d.source){
-                      return 50 * d.weight;
+                      return 100 * d.weight;
                     } else {
                       return d.weight;
                     }
@@ -347,7 +351,9 @@ export default angular.module(name, [
                                   return -200;
                                 }
                               })
-                              .friction(0.9).start();
+                              .friction(0.7)
+                              .gravity(0.15)
+                              .start();
 
                 var edge = vis.selectAll("line")
                               .data(links)
@@ -357,7 +363,7 @@ export default angular.module(name, [
                               .style("opacity", 0.45)
                               .style("stroke-width",function (d) {
                                 if ("nNodes" in d.source){
-                                  return 50 * d.weight;
+                                  return 100 * d.weight;
                                 } else {
                                   return d.weight;
                                 }
